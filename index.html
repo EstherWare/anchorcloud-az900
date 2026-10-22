@@ -90,7 +90,7 @@ pre{background:#101827;color:#E3ECFA;border-radius:6px;padding:12px 14px;font:.8
 .plan input{margin-top:6px;width:18px;height:18px;accent-color:var(--ok);flex:none}
 .plan li.done span{text-decoration:line-through;color:var(--ink2)}
 .plan b{display:block;font-size:.8rem;color:var(--margin)}
-input[type=text],input[type=password]{width:100%;font:inherit;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:6px;padding:0 8px;line-height:28px}
+input[type=text],input[type=password],input[type=email]{width:100%;font:inherit;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:6px;padding:0 8px;line-height:28px}
 .board{list-style:none;padding:0;margin:8px 0 12px;counter-reset:r}
 .board li{display:flex;gap:10px;align-items:baseline;padding:2px 6px;border-bottom:1px dashed var(--rule);line-height:1.6}
 .board li::before{counter-increment:r;content:counter(r);font:800 1rem 'Bricolage Grotesque',sans-serif;width:1.6em;color:var(--margin)}
@@ -249,56 +249,35 @@ footer{margin-top:36px;color:var(--ink2);font-size:.82rem;line-height:1.5;max-wi
 <section class="panel" id="p-board" hidden>
  <div class="grid">
   <div class="card">
-    <div id="authOut"><h2>Sign in</h2><p class="muted">One account keeps your score and questions yours, on any device.</p>
-    <div class="row"><label for="aEmail">Email</label><input type="text" id="aEmail" inputmode="email" autocomplete="email"></div>
-    <div class="row"><label for="aPw">Password (6 or more characters)</label><input type="password" id="aPw" autocomplete="current-password"></div>
-    <button class="btn go" id="inBtn">Sign in</button> <button class="btn" id="upBtn">Create account</button></div>
-    <div id="authIn" hidden><p>Signed in as <b id="aWho"></b></p><button class="btn" id="outBtn">Sign out</button></div>
-    <div class="muted" id="aMsg" role="status"></div>
-    <h2 style="margin-top:20px">Save my progress</h2>
-    <p class="muted">Your nickname, city and readiness score go on the #1MillionDevs board. Nothing else is shared. Finishing a round saves automatically once you’ve saved here.</p>
+    <div id="authOut">
+      <h2>Sign in</h2><p class="muted">One account keeps your score and questions yours, on any device.</p>
+      <div class="row"><label for="aEmail">Email</label><input type="email" id="aEmail" autocomplete="email"></div>
+      <div class="row"><label for="aPw">Password (6 or more characters)</label><input type="password" id="aPw" autocomplete="current-password"></div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn go" id="inBtn">Sign in</button> 
+        <button class="btn" id="upBtn">Create account</button>
+      </div>
+    </div>
+    <div id="authIn" hidden>
+      <p>Signed in as <b id="aWho"></b></p>
+      <button class="btn" id="outBtn" style="margin-top:8px">Sign out</button>
+    </div>
+    <div class="muted" id="aMsg" role="status" style="margin-top:8px"></div>
+
+    <h2 style="margin-top:24px">Save my progress</h2>
+    <p class="muted">Your nickname, city and readiness score go on the #1MillionDevs board. Finishing a round saves automatically once you’ve saved here.</p>
     <div class="row"><label for="nick">Nickname</label><input type="text" id="nick" maxlength="20" autocomplete="nickname"></div>
     <div class="row"><label for="city">City</label><input type="text" id="city" maxlength="30"></div>
-    <p>Readiness right now: <b id="bNow">0%</b></p>
-    <button class="btn go" id="saveBtn">Save progress</button>
+    <p style="margin-top:8px">Readiness right now: <b id="bNow">0%</b></p>
+    <button class="btn go" id="saveBtn" style="margin-top:8px">Save progress</button>
     <div class="muted" id="saveMsg" role="status" style="margin-top:8px"></div>
   </div>
-  <div class="card"><!-- Supabase Cloud Sync & Auth Panel -->
- <div class="card" style="margin-top:20px">
-  <div class="bar">
-    <div>
-      <h2>☁️ Cloud Sync &amp; #1MillionDevs Cohort Board</h2>
-      <p class="muted">Sign in with Supabase Auth to save your progress to PostgreSQL and appear on the live cohort leaderboard.</p>
-    </div>
-    <span class="hand" id="syncMsg" style="color:var(--ok)"></span>
-  </div>
 
-  <!-- Visible Auth Box -->
-  <div style="margin-top:12px; padding:12px; background:var(--paper); border:2px solid var(--ink); border-radius:8px;" id="authBox">
-    <div style="font-weight:700; margin-bottom:6px; font-size:0.9rem;">🔐 Supabase Account Sign In / Sign Up</div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-      <input type="email" id="authEmail" placeholder="your-email@example.com" style="width:220px">
-      <input type="password" id="authPass" placeholder="Password (min 6 chars)" style="width:180px">
-      <button class="btn" id="btnSignUp">Sign Up</button>
-      <button class="btn go" id="btnSignIn">Sign In</button>
-      <button class="btn" id="btnSignOut" style="display:none; background:var(--badbg); color:var(--bad);">Sign Out</button>
-    </div>
-    <div id="userStatus" class="muted" style="margin-top:6px; font-size:0.82rem;">Not signed in. Sign up with email to secure your scores.</div>
-  </div>
-
-  <div class="bar" style="margin-top:12px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <input type="text" id="sbHandle" placeholder="Your nickname (e.g. Esther K.)" aria-label="Your nickname" style="width:190px">
-      <input type="text" id="sbCity" placeholder="City (e.g. Nairobi)" value="Nairobi" aria-label="Your city" style="width:130px">
-      <button class="btn go" id="sbSave">Save notebook to cloud</button>
-      <button class="btn" id="sbLoad">Restore my notebook</button>
-    </div>
-  </div>
-  <ul class="board" id="sbBoard"></ul>
- </div>
+  <div class="card">
     <h2>#1MillionDevs leaderboard</h2>
-    <ol class="board" id="boardList"></ol>
-    <button class="btn" id="refresh">Refresh</button>
+    <p class="muted">Top scores synced from Supabase PostgreSQL.</p>
+    <ol class="board" id="boardList" style="margin-top:12px"></ol>
+    <button class="btn" id="refresh" style="margin-top:10px">Refresh leaderboard</button>
   </div>
  </div>
 </section>
@@ -307,60 +286,16 @@ footer{margin-top:36px;color:var(--ink2);font-size:.82rem;line-height:1.5;max-wi
 </div>
 
 <script>
-  // ============================================================================
-// SUPABASE AUTH & SYNC SCRIPT WIRING
 // ============================================================================
-const sbReady = () => SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_PROJECT_ID");
-
-async function supabaseAuth(endpoint, email, password) {
-  if (!sbReady()) { alert("Please add your Supabase URL and Anon key in the script first!"); return null; }
-  try {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/${endpoint}`, {
-      method: "POST",
-      headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    return await res.json();
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
-
-document.getElementById("btnSignUp").onclick = async () => {
-  const email = document.getElementById("authEmail").value;
-  const password = document.getElementById("authPass").value;
-  const data = await supabaseAuth("signup", email, password);
-  if (data && data.access_token) {
-    document.getElementById("userStatus").textContent = `Signed up & logged in as: ${email}`;
-    document.getElementById("btnSignOut").style.display = "inline-block";
-    alert("Account created successfully!");
-  } else {
-    alert("Sign up failed: " + (data?.msg || data?.error_description || "Check your email/password"));
-  }
-};
-
-document.getElementById("btnSignIn").onclick = async () => {
-  const email = document.getElementById("authEmail").value;
-  const password = document.getElementById("authPass").value;
-  const data = await supabaseAuth("token?grant_type=password", email, password);
-  if (data && data.access_token) {
-    document.getElementById("userStatus").textContent = `Logged in as: ${email}`;
-    document.getElementById("btnSignOut").style.display = "inline-block";
-    alert("Logged in successfully!");
-  } else {
-    alert("Login failed: " + (data?.error_description || "Invalid login credentials"));
-  }
-};
-
-document.getElementById("btnSignOut").onclick = () => {
-  document.getElementById("userStatus").textContent = "Signed out.";
-  document.getElementById("btnSignOut").style.display = "none";
-};
+// SUPABASE CONFIGURATION & APP SCRIPT
+// ============================================================================
+const SB_URL="https://gpuvlicfonflaoyroziy.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdXZsaWNmb25mbGFveXJveml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MDE1NjgsImV4cCI6MjEwODE3NzU2OH0.dOSTMTpPgg2hyjhvamyJGUfnoAWJyMzd3hcRJJ-ZGNc";
+const H={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=s=>document.querySelector(s);
 const DOM={1:"Cloud concepts",2:"Architecture and services",3:"Management and governance"};
 const WT={1:.275,2:.375,3:.325};
-// correct answer is always o[0]; the order is shuffled when shown
+
 const Q=[
 {d:1,s:"Whatever the service model, which job always stays with the cloud provider?",a:"always stays with the cloud provider",o:["Running the physical datacenter, network and host hardware","Patching the guest OS on your VMs","Deciding who can access your data","Configuring your own application"],tag:"Physical datacenter = provider, every time",why:"In the shared responsibility model the provider always owns physical datacenters, networks and hosts. Data, identities and access are yours in every model.",ana:"Renting a flat in Kilimani: the landlord keeps the roof and the borehole running. What you lock in your cupboard is on you."},
 {d:1,s:"A shop’s site adds 8 web servers during a flash sale, then removes them at midnight with nobody touching anything. Which cloud benefit is that?",a:"adds 8 web servers",o:["Elasticity","High availability","Vertical scaling","Geo-distribution"],tag:"Scale out and back in automatically = elasticity",why:"Elasticity means resources grow and shrink automatically with demand. Vertical scaling would make one server bigger instead.",ana:"A matatu route that sends out extra vehicles at 5 pm and pulls them off at 9 pm without anyone phoning the sacco."},
@@ -407,6 +342,7 @@ const Q=[
 {d:3,s:"Where can you download Microsoft’s audit reports and compliance documentation?",a:"audit reports and compliance documentation",o:["Service Trust Portal","Azure Advisor","Azure Service Health","Azure Policy"],tag:"Audit reports and compliance docs = Service Trust Portal",why:"The Service Trust Portal publishes audit reports, certifications and compliance guidance.",ana:"The public notice board where the auditor’s certificates are pinned."},
 {d:3,s:"Which option lowers cost by committing to one or three years of usage for a VM in exchange for a discount?",a:"committing to one or three years",o:["Azure Reservations","Spot VMs","Pay-as-you-go","Hot access tier"],tag:"1 or 3 year commitment discount = Reservations",why:"Reservations give a discount for a one- or three-year commitment. Spot VMs use spare capacity and can be evicted.",ana:"Paying for a year of matatu fare in advance at a cheaper rate."}
 ];
+
 const TW=[
 {t:"VNet peering or service endpoint?",a:["VNet peering","Joins two virtual networks so their VMs talk privately."],b:["Service endpoint","Lets your VNet reach an Azure service such as SQL or Storage over Microsoft’s network."],sc:"Your web VNet needs to talk to the VMs in a different VNet.",ans:0,hook:"Peering is network to network. Endpoint is network to service."},
 {t:"Availability set or availability zone?",a:["Availability set","Spreads VMs across racks inside one datacenter."],b:["Availability zone","Separate buildings in one region with their own power, cooling and network."],sc:"The whole datacenter building loses power. Which one still protects you?",ans:1,hook:"Set survives a rack failure. Zone survives a building failure."},
@@ -415,6 +351,7 @@ const TW=[
 {t:"Azure Policy or resource lock?",a:["Azure Policy","Rules on what can be deployed and how it must be configured."],b:["Resource lock","Stops an existing resource being deleted or changed by accident."],sc:"An admin with Owner rights must not be able to delete the production database by mistake.",ans:1,hook:"Policy governs what gets created. Lock protects what already exists."},
 {t:"VPN gateway or ExpressRoute?",a:["VPN gateway","Encrypted tunnel over the public internet."],b:["ExpressRoute","Private dedicated connection that skips the public internet."],sc:"Your bank’s rules say traffic to Azure must never cross the public internet.",ans:1,hook:"VPN is encrypted on a shared road. ExpressRoute is your own road."}
 ];
+
 const BU={
  peer:{n:"VNet peering or service endpoints",nbo:"Peering is a private road between your Westlands office and your Upper Hill office. A **service endpoint** is a private door from your office straight into the bank vault (Azure SQL or Storage) without going out on the public road.",mp:"Peering links two of your own M-Pesa branches. A **service endpoint** is a direct private line from your branch to the central ledger.",sh:"**Peering** ni ku-link maVNet mbili ziongee private. **Service endpoint** ni njia ya VIP kutoka VNet yako hadi Azure SQL au Storage bila kupitia public internet."},
  zone:{n:"Availability sets or zones",nbo:"An **availability set** is two power strips in different rooms of one building in CBD. **Availability zones** are three separate buildings in Westlands, Upper Hill and Karen, each with its own generator and fibre.",mp:"A set is two tills in the same M-Pesa shop. **Zones** are three shops across town, so a power cut on one street does not stop customers.",sh:"**Availability set** ni servers kwa racks tofauti ndani ya jengo moja. **Zones** ni mijengo mitatu tofauti, kila moja na stima na net yake."},
@@ -424,24 +361,20 @@ const BU={
 };
 const CTX={nbo:"Nairobi roads and estates",mp:"M-Pesa agents",sh:"Sheng"};
 
-// saved progress (private to this browser)
 let S={q:{},times:[],right:0,total:0,exam:"",hrs:"2",weak:"3",plan:{}};
 try{const x=localStorage.getItem("anchorcloud");if(x)S=Object.assign(S,JSON.parse(x))}catch(e){}
 const save=()=>{try{localStorage.setItem("anchorcloud",JSON.stringify(S))}catch(e){}};
 
-// tabs
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
  document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p-"+b.dataset.t);
  if(b.dataset.t==="ready")renderReady();if(b.dataset.t==="board")loadBoard();if(b.dataset.t==="path")renderPath();});
-// theme
+
 function setTheme(t){document.documentElement.dataset.theme=t;$("#theme").textContent=t==="dark"?"Light mode":"Dark mode"}
 setTheme(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
 $("#theme").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
 
-// quiz
 let deck=[],idx=0,t0=0,order=[],streak=0,drilling=false,answered=false,lesson=null,lRight=0,pathMsg="";
-// lesson path: each lesson is a set of question numbers (positions in Q)
 const LS=[
 {n:"Cloud models and billing",ids:[12,28,2,16,13]},
 {n:"Service models and scaling",ids:[0,3,15,1,29,14]},
@@ -452,6 +385,7 @@ const LS=[
 {n:"Organising and managing",ids:[38,23,24,26,41]},
 {n:"Governance and compliance",ids:[9,10,25,42]},
 {n:"Cost and monitoring",ids:[8,11,27,43]}];
+
 const stars=n=>"★★★".slice(0,n)+"☆☆☆".slice(0,3-n);
 function renderPath(){
  const P=S.path||{},first=LS.findIndex((x,j)=>(P[j]||0)<2);let done=0;
@@ -459,19 +393,24 @@ function renderPath(){
   return `<li style="--x:${Math.round(Math.sin(i*1.1)*55)}px"><button class="node ${open?"":"lock"} ${i===first?"cur":""} ${st>=2?"done":""}" data-i="${i}" ${open?"":"disabled"} aria-label="Lesson ${i+1}: ${l.n}${open?"":", locked"}"><b>${open?i+1:"🔒"}</b><small>${open?stars(st):""}</small></button><span>${l.n}<small>${l.ids.length} questions</small></span></li>`}).join("");
  $("#pathDone").textContent=`${done} of ${LS.length} lessons passed`;
  $("#pathMsg").textContent=pathMsg;pathMsg=""}
+
 function startLesson(i){
  lesson=i;lRight=0;drilling=false;deck=LS[i].ids.slice().sort(()=>Math.random()-.5);idx=0;
  document.querySelector('[data-t=quiz]').click();show();$("#drillnote").textContent="Lesson "+(i+1)+": "+LS[i].n}
+
 function finishLesson(){
  const i=lesson,n=deck.length,p=lRight/n,st=p===1?3:p>=.8?2:p>=.6?1:0,old=(S.path||{})[i]||0;
  S.path=S.path||{};if(st>old)S.path[i]=st;if(st>=2&&old<2)S.xp=(S.xp||0)+20;
  lesson=null;save();autoSave();
  pathMsg=`Lesson ${i+1}: ${lRight} of ${n} right. `+(st>=2?(old<2&&i+1<LS.length?"Next lesson unlocked.":"Nicely done."):"You need 80% to move on. Have another go.");
  buildDeck();stats();document.querySelector('[data-t=path]').click()}
+
 $("#pathList").addEventListener("click",e=>{const b=e.target.closest(".node");if(b&&!b.disabled)startLesson(+b.dataset.i)});
+
 function buildDeck(){const d=+$("#dom").value;drilling=false;lesson=null;deck=Q.map((q,i)=>i).filter(i=>!d||d===4||Q[i].d===d);
  const pr=i=>{const r=S.q[i];return(r?(r.miss?0:r.run<2?2:3):1)+Math.random()*.9};
  deck.sort((a,b)=>d===4?pr(a)-pr(b):Math.random()-.5);idx=0;show()}
+
 function show(){
  const q=Q[deck[idx]];answered=false;
  $("#meta").textContent=`${DOM[q.d]}, question ${idx+1} of ${deck.length}`;
@@ -482,6 +421,7 @@ function show(){
  $("#fb").innerHTML="";$("#guard").innerHTML="";$("#next").hidden=true;
  $("#drillnote").textContent=drilling?"Redo pile mode":"";t0=Date.now();
 }
+
 $("#opts").addEventListener("click",e=>{
  const b=e.target.closest(".opt");if(!b||answered)return;answered=true;
  const id=deck[idx],q=Q[id],k=+b.dataset.k,ok=order[k]===0,secs=(Date.now()-t0)/1000;
@@ -497,8 +437,10 @@ $("#opts").addEventListener("click",e=>{
  $("#next").hidden=false;$("#next").textContent=idx+1<deck.length?"Next question":"Finish round";
  stats();queue();
 });
+
 $("#next").onclick=()=>{if(idx+1<deck.length){idx++;show()}else{if(lesson!==null){finishLesson();return}autoSave();buildDeck();$("#drillnote").textContent=S.nick?"Round finished and saved.":"Round finished. Add a nickname in Leaderboard to save your score."}};
 $("#dom").onchange=buildDeck;$("#spot").onchange=()=>{if(!answered)show()};
+
 function stats(){
  $("#sStreak").textContent=streak;
  const n=S.times.length;$("#sPace").textContent=n?(S.times.reduce((a,b)=>a+b,0)/n).toFixed(1):"–";
@@ -507,6 +449,7 @@ function stats(){
  const xp=S.xp||0,iso=ld;
  $("#sXp").textContent=xp;$("#sLvl").textContent="XP, level "+(Math.floor(Math.sqrt(xp/50))+1);
  $("#sDay").textContent=(S.last===iso(0)||S.last===iso(1))?(S.days||0):0;}
+
 const ld=o=>{const d=new Date(Date.now()-o*864e5);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 function dayTick(){const t=ld(0);if(S.last===t)return;S.days=S.last===ld(1)?(S.days||0)+1:1;S.last=t}
 function queue(){
@@ -515,7 +458,6 @@ function queue(){
  $("#drill").disabled=!m.length;}
 $("#drill").onclick=()=>{const m=Object.keys(S.q).filter(i=>S.q[i].miss).map(Number);if(!m.length)return;lesson=null;deck=m;idx=0;drilling=true;show()};
 
-// look-alikes
 $("#twinBox").innerHTML=TW.map((w,i)=>`<div class="card" data-i="${i}"><h3>${w.t}</h3>
 <p><b>${w.a[0]}:</b> ${w.a[1]}</p><p><b>${w.b[0]}:</b> ${w.b[1]}</p>
 <p class="muted"><em>${w.sc}</em></p>
@@ -526,7 +468,6 @@ $("#twinBox").addEventListener("click",e=>{
  c.querySelectorAll("[data-p]")[w.ans].classList.add("right");if(p!==w.ans)b.classList.add("wrong");
  c.querySelector(".out").innerHTML=`<div class="note"><span class="hand">${p===w.ans?"ticked":"red pen"}</span>${w.hook}</div>`;});
 
-// study buddy
 $("#bTopic").innerHTML=Object.entries(BU).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
 let tw;
 function buddy(){
@@ -548,7 +489,6 @@ Return JSON: {"analogy":"","not":"","anchor":""}`;
 $("#bTopic").onchange=buddy;$("#bCtx").onchange=buddy;
 $("#copy").onclick=async()=>{try{await navigator.clipboard.writeText($("#prompt").textContent);$("#copied").textContent=" Copied."}catch(e){$("#copied").textContent=" Select the text and copy it by hand."}setTimeout(()=>$("#copied").textContent="",2000)};
 
-// readiness
 function domScore(d){const ids=Q.map((q,i)=>i).filter(i=>Q[i].d===d);const seen=ids.filter(i=>S.q[i]).length;const ok=ids.filter(i=>S.q[i]&&S.q[i].ok).length;return{seen,n:ids.length,pct:Math.round(ok/ids.length*100)}}
 function renderReady(){
  let tot=0,seen=0;
@@ -563,6 +503,7 @@ function renderReady(){
   tot>=80?"This is a good sign. Keep clearing the redo pile and sit a timed mock under real conditions.":`Aim for 80% or more in every area. Start with ${DOM[Math.min(...[1,2,3].map(d=>[domScore(d).pct,d]).sort((a,b)=>a[0]-b[0])[0].slice(1))]||"your lowest area"}.`;
  renderPlan();
 }
+
 function renderPlan(){
  const ex=$("#exam").value;if(!ex){$("#plan").innerHTML="";$("#planHead").textContent="Pick your exam date.";return}
  const today=new Date();today.setHours(0,0,0,0);const end=new Date(ex+"T00:00");
@@ -581,15 +522,13 @@ function renderPlan(){
 }
 $("#plan").addEventListener("change",e=>{const c=e.target;S.plan[c.dataset.k]=c.checked;c.closest("li").classList.toggle("done",c.checked);save()});
 ["exam","hrs","weak"].forEach(id=>$("#"+id).addEventListener("change",()=>{S[id]=$("#"+id).value;save();renderPlan()}));
-// Supabase (the anon key is meant to be public; the table's row level security is what protects your data)
-const SB_URL="https://gpuvlicfonflaoyroziy.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdXZsaWNmb25mbGFveXJveml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MDE1NjgsImV4cCI6MjEwODE3NzU2OH0.dOSTMTpPgg2hyjhvamyJGUfnoAWJyMzd3hcRJJ-ZGNc";
-const H={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"};
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
 function readiness(){let t=0;[1,2,3].forEach(d=>t+=domScore(d).pct*WT[d]);return Math.round(t/(WT[1]+WT[2]+WT[3]))}
 async function sb(path,opt){const c=new AbortController(),to=setTimeout(()=>c.abort(),8000),t=await token();
  try{const r=await fetch(SB_URL+"/rest/v1/"+path,Object.assign({},opt,{signal:c.signal,headers:Object.assign({},H,t?{Authorization:"Bearer "+t}:{},opt&&opt.headers)}));
   if(!r.ok)throw new Error((await r.text()).slice(0,160)||r.status);const tx=await r.text();return tx?JSON.parse(tx):null}
  finally{clearTimeout(to)}}
+
 async function saveProgress(quiet){
  const nick=$("#nick").value.trim(),city=$("#city").value.trim(),msg=$("#saveMsg");
  if(!nick||!city){if(!quiet)msg.textContent="Add a nickname and a city first.";return}
@@ -600,20 +539,25 @@ async function saveProgress(quiet){
   msg.textContent=`Saved: ${pct}% readiness.`}
  catch(e){msg.textContent="Couldn’t save to the leaderboard. Check your connection and that the notebooks table is set up."}
  loadBoard()}
+
 async function loadBoard(){
  const ul=$("#boardList");$("#bNow").textContent=readiness()+"%";
  try{const rows=await sb("notebooks?select=nickname,city,readiness&order=readiness.desc,updated_at.desc&limit=10");
   ul.innerHTML=rows.length?rows.map(r=>`<li class="${r.nickname===S.nick&&r.city===S.city?"me":""}"><span>${esc(r.nickname)} <small>${esc(r.city)}</small></span><b>${+r.readiness}%</b></li>`).join(""):"<li>No one yet. Be first.</li>"}
- catch(e){ul.innerHTML="<li>The live board couldn’t load. Inside Claude’s preview a page can’t reach other sites, so open the hosted copy of this file.</li>"}}
+ catch(e){ul.innerHTML="<li>The live board couldn’t load. Open the hosted copy on GitHub Pages to test Supabase live.</li>"}}
+
 function autoSave(){if(S.nick&&S.city)saveProgress(true)}
 $("#saveBtn").onclick=()=>saveProgress(false);$("#refresh").onclick=loadBoard;
-// sign in (Supabase Auth, email and password)
-async function authCall(p,body){const r=await fetch(SB_URL+"/auth/v1/"+p,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});
+
+async function authCall(p,body){const r=await fetch(SB_URL+"/auth/v1/"+p,{method:"POST",headers:Object.assign({},H,{Authorization:"Bearer "+SB_KEY}),body:JSON.stringify(body)});
  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.error_description||j.message||"Sign-in failed");return j}
+
 function setSess(j){if(j.access_token){S.auth={at:j.access_token,rt:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user.id,email:j.user.email};save()}}
 async function token(){const a=S.auth;if(!a)return null;if(Date.now()<a.exp)return a.at;
  try{const j=await authCall("token?grant_type=refresh_token",{refresh_token:a.rt});setSess(j);return S.auth.at}catch(e){S.auth=null;save();showAuth();return null}}
+
 function showAuth(){const a=S.auth;$("#authOut").hidden=!!a;$("#authIn").hidden=!a;$("#aWho").textContent=a?a.email:""}
+
 async function doAuth(up){const email=$("#aEmail").value.trim(),pw=$("#aPw").value,m=$("#aMsg");
  if(!email||pw.length<6){m.textContent="Enter your email and a password of at least 6 characters.";return}
  m.textContent="One moment…";
@@ -621,42 +565,48 @@ async function doAuth(up){const email=$("#aEmail").value.trim(),pw=$("#aPw").val
   if(!j.access_token){m.textContent="Check your email to confirm your account, then sign in.";return}
   setSess(j);$("#aPw").value="";m.textContent="";showAuth();loadBoard();loadAsk()}
  catch(e){m.textContent=e.message}}
+
 $("#inBtn").onclick=()=>doAuth(false);$("#upBtn").onclick=()=>doAuth(true);
 $("#outBtn").onclick=()=>{S.auth=null;save();showAuth();loadAsk()};
-// ask the community
+
 async function loadAsk(){const ul=$("#askList");
  try{const rows=await sb("buddy_questions?select=id,nickname,question,context,answer,answered_by,answered_uid&order=created_at.desc&limit=15");
   ul.innerHTML=rows.length?rows.map(r=>`<li data-id="${esc(r.id)}"><b>${esc(r.question)}</b> <small class="muted">${esc(r.nickname)}, ${esc(r.context)}</small>${r.answer?`<div class="note"><span class="hand">${esc(r.answered_by||"a learner")} explains</span>${esc(r.answer)}${S.auth&&r.answered_uid!==S.auth.uid?`<br><button class="btn" data-f="1" style="line-height:22px;font-size:.8rem;margin-top:6px">Flag as wrong</button>`:""}</div>`:(S.auth?`<div class="row"><input type="text" maxlength="600" placeholder="Explain it with a local example" aria-label="Your explanation"><button class="btn" data-a="1">Explain</button></div>`:`<div class="muted">Waiting for an explanation. Sign in to add one.</div>`)}</li>`).join(""):"<li>No questions yet. Ask the first one.</li>"}
- catch(e){ul.innerHTML="<li class=\"muted\">Questions couldn’t load. Inside Claude’s preview the page can’t reach other sites, so use the hosted copy.</li>"}}
+ catch(e){ul.innerHTML="<li class=\"muted\">Questions couldn’t load. Open the hosted copy on GitHub Pages to connect.</li>"}}
+
 async function askQ(){const q=$("#askQ").value.trim(),m=$("#askMsg");
  if(!S.auth){m.textContent="Sign in first (Leaderboard tab).";return}
  if(!S.nick){m.textContent="Save a nickname first (Leaderboard tab).";return}
  if(q.length<5){m.textContent="Write a little more.";return}
  try{await sb("buddy_questions",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({user_id:S.auth.uid,nickname:S.nick,question:q,context:$("#askC").value})});
   $("#askQ").value="";m.textContent="Posted.";loadAsk()}catch(e){m.textContent="Couldn’t post. Check that the buddy_questions table is set up."}}
+
 $("#askBtn").onclick=askQ;
+
 $("#askList").addEventListener("click",async e=>{const b=e.target.closest("[data-f]");if(!b||b.disabled)return;
- if(!confirm("Flag this explanation as wrong or unhelpful? After three flags from different learners it is removed so someone can answer again."))return;
+ if(!confirm("Flag this explanation as wrong or unhelpful?"))return;
  b.disabled=true;
  try{await sb("rpc/flag_answer",{method:"POST",body:JSON.stringify({qid:b.closest("li").dataset.id})});b.textContent="Flagged, thank you"}
  catch(err){b.textContent="Couldn’t flag, try again";b.disabled=false}});
+
 $("#askList").addEventListener("click",async e=>{const b=e.target.closest("[data-a]");if(!b)return;
  const li=b.closest("li"),t=li.querySelector("input").value.trim();if(t.length<10||!S.nick)return;
  try{await sb("buddy_questions?id=eq."+encodeURIComponent(li.dataset.id)+"&answer=is.null",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({answer:t,answered_by:S.nick,answered_uid:S.auth.uid})});loadAsk()}catch(err){}});
-// keyboard: A-D or 1-4 to answer, Enter for next
+
 document.addEventListener("keydown",e=>{
  if($("#p-quiz").hidden||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.metaKey)return;
  const k="abcd1234".indexOf(e.key.toLowerCase());
  if(k>=0&&!answered){const b=document.querySelectorAll(".opt")[k%4];if(b)b.click()}
  else if(e.key==="Enter"&&e.target.tagName!=="BUTTON"&&!$("#next").hidden)$("#next").click()});
-// keep the leaderboard fresh while it is open
+
 setInterval(()=>{if(!$("#p-board").hidden&&!document.hidden)loadBoard()},30000);
 $("#reset").onclick=()=>{if(confirm("Clear all progress saved in this browser?")){try{localStorage.removeItem("anchorcloud")}catch(e){}location.reload()}};
+
 (function init(){
  const d=new Date();d.setDate(d.getDate()+7);
  $("#exam").value=S.exam||ld(-7);$("#hrs").value=S.hrs;$("#weak").value=S.weak;
  $("#nick").value=S.nick||"";$("#city").value=S.city||"";
- buildDeck();stats();queue();buddy();renderPath();showAuth();loadAsk();
+ buildDeck();stats();queue();buddy();renderPath();showAuth();loadAsk();loadBoard();
 })();
 </script>
 </body>
