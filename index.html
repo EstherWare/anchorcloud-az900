@@ -263,7 +263,39 @@ footer{margin-top:36px;color:var(--ink2);font-size:.82rem;line-height:1.5;max-wi
     <button class="btn go" id="saveBtn">Save progress</button>
     <div class="muted" id="saveMsg" role="status" style="margin-top:8px"></div>
   </div>
-  <div class="card">
+  <div class="card"><!-- Supabase Cloud Sync & Auth Panel -->
+ <div class="card" style="margin-top:20px">
+  <div class="bar">
+    <div>
+      <h2>☁️ Cloud Sync &amp; #1MillionDevs Cohort Board</h2>
+      <p class="muted">Sign in with Supabase Auth to save your progress to PostgreSQL and appear on the live cohort leaderboard.</p>
+    </div>
+    <span class="hand" id="syncMsg" style="color:var(--ok)"></span>
+  </div>
+
+  <!-- Visible Auth Box -->
+  <div style="margin-top:12px; padding:12px; background:var(--paper); border:2px solid var(--ink); border-radius:8px;" id="authBox">
+    <div style="font-weight:700; margin-bottom:6px; font-size:0.9rem;">🔐 Supabase Account Sign In / Sign Up</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+      <input type="email" id="authEmail" placeholder="your-email@example.com" style="width:220px">
+      <input type="password" id="authPass" placeholder="Password (min 6 chars)" style="width:180px">
+      <button class="btn" id="btnSignUp">Sign Up</button>
+      <button class="btn go" id="btnSignIn">Sign In</button>
+      <button class="btn" id="btnSignOut" style="display:none; background:var(--badbg); color:var(--bad);">Sign Out</button>
+    </div>
+    <div id="userStatus" class="muted" style="margin-top:6px; font-size:0.82rem;">Not signed in. Sign up with email to secure your scores.</div>
+  </div>
+
+  <div class="bar" style="margin-top:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="sbHandle" placeholder="Your nickname (e.g. Esther K.)" aria-label="Your nickname" style="width:190px">
+      <input type="text" id="sbCity" placeholder="City (e.g. Nairobi)" value="Nairobi" aria-label="Your city" style="width:130px">
+      <button class="btn go" id="sbSave">Save notebook to cloud</button>
+      <button class="btn" id="sbLoad">Restore my notebook</button>
+    </div>
+  </div>
+  <ul class="board" id="sbBoard"></ul>
+ </div>
     <h2>#1MillionDevs leaderboard</h2>
     <ol class="board" id="boardList"></ol>
     <button class="btn" id="refresh">Refresh</button>
@@ -275,6 +307,56 @@ footer{margin-top:36px;color:var(--ink2);font-size:.82rem;line-height:1.5;max-wi
 </div>
 
 <script>
+  // ============================================================================
+// SUPABASE AUTH & SYNC SCRIPT WIRING
+// ============================================================================
+const sbReady = () => SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_PROJECT_ID");
+
+async function supabaseAuth(endpoint, email, password) {
+  if (!sbReady()) { alert("Please add your Supabase URL and Anon key in the script first!"); return null; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/${endpoint}`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+document.getElementById("btnSignUp").onclick = async () => {
+  const email = document.getElementById("authEmail").value;
+  const password = document.getElementById("authPass").value;
+  const data = await supabaseAuth("signup", email, password);
+  if (data && data.access_token) {
+    document.getElementById("userStatus").textContent = `Signed up & logged in as: ${email}`;
+    document.getElementById("btnSignOut").style.display = "inline-block";
+    alert("Account created successfully!");
+  } else {
+    alert("Sign up failed: " + (data?.msg || data?.error_description || "Check your email/password"));
+  }
+};
+
+document.getElementById("btnSignIn").onclick = async () => {
+  const email = document.getElementById("authEmail").value;
+  const password = document.getElementById("authPass").value;
+  const data = await supabaseAuth("token?grant_type=password", email, password);
+  if (data && data.access_token) {
+    document.getElementById("userStatus").textContent = `Logged in as: ${email}`;
+    document.getElementById("btnSignOut").style.display = "inline-block";
+    alert("Logged in successfully!");
+  } else {
+    alert("Login failed: " + (data?.error_description || "Invalid login credentials"));
+  }
+};
+
+document.getElementById("btnSignOut").onclick = () => {
+  document.getElementById("userStatus").textContent = "Signed out.";
+  document.getElementById("btnSignOut").style.display = "none";
+};
 const $=s=>document.querySelector(s);
 const DOM={1:"Cloud concepts",2:"Architecture and services",3:"Management and governance"};
 const WT={1:.275,2:.375,3:.325};
