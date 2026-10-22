@@ -295,6 +295,21 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 const $=s=>document.querySelector(s);
 const DOM={1:"Cloud concepts",2:"Architecture and services",3:"Management and governance"};
 const WT={1:.275,2:.375,3:.325};
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const errText=(j,fallback)=>j&&typeof j==="object"?(j.msg||j.error_description||j.message||j.error||fallback):fallback;
+const parseJson=t=>{try{return JSON.parse(t)}catch(e){return null}};
+function b64urlJson(t){try{const b=t.replace(/-/g,"+").replace(/_/g,"/"),p="=".repeat((4-b.length%4)%4);return JSON.parse(atob(b+p))}catch(e){return null}}
+function supabaseConfigError(){
+ if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SB_URL||""))return "Supabase URL is invalid in this build.";
+ if(typeof SB_KEY!=="string"||!SB_KEY.trim())return "Supabase anon key is missing in this build.";
+ const parts=SB_KEY.split(".");
+ if(parts.length!==3)return "Supabase anon key looks incomplete in this build.";
+ const payload=b64urlJson(parts[1]);
+ if(!payload)return "Supabase anon key format is invalid in this build.";
+ if(payload.role==="service_role")return "Supabase service-role key cannot be used in the browser. Configure an anon key.";
+ return null;
+}
+const SB_CFG_ERR=supabaseConfigError();
 
 const Q=[
 {d:1,s:"Whatever the service model, which job always stays with the cloud provider?",a:"always stays with the cloud provider",o:["Running the physical datacenter, network and host hardware","Patching the guest OS on your VMs","Deciding who can access your data","Configuring your own application"],tag:"Physical datacenter = provider, every time",why:"In the shared responsibility model the provider always owns physical datacenters, networks and hosts. Data, identities and access are yours in every model.",ana:"Renting a flat in Kilimani: the landlord keeps the roof and the borehole running. What you lock in your cupboard is on you."},
@@ -364,6 +379,11 @@ const CTX={nbo:"Nairobi roads and estates",mp:"M-Pesa agents",sh:"Sheng"};
 let S={q:{},times:[],right:0,total:0,exam:"",hrs:"2",weak:"3",plan:{}};
 try{const x=localStorage.getItem("anchorcloud");if(x)S=Object.assign(S,JSON.parse(x))}catch(e){}
 const save=()=>{try{localStorage.setItem("anchorcloud",JSON.stringify(S))}catch(e){}};
+if(S.auth&&typeof S.auth==="object"){
+ const a=S.auth;
+ if(!(a.at&&a.rt&&a.uid&&a.email))S.auth=null;
+ else if(!Number.isFinite(a.exp))a.exp=Date.now()-1;
+}else S.auth=null;
 
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
@@ -525,8 +545,14 @@ $("#plan").addEventListener("change",e=>{const c=e.target;S.plan[c.dataset.k]=c.
 
 function readiness(){let t=0;[1,2,3].forEach(d=>t+=domScore(d).pct*WT[d]);return Math.round(t/(WT[1]+WT[2]+WT[3]))}
 async function sb(path,opt){const c=new AbortController(),to=setTimeout(()=>c.abort(),8000),t=await token();
+ if(SB_CFG_ERR)throw new Error(SB_CFG_ERR);
  try{const r=await fetch(SB_URL+"/rest/v1/"+path,Object.assign({},opt,{signal:c.signal,headers:Object.assign({},H,t?{Authorization:"Bearer "+t}:{},opt&&opt.headers)}));
-  if(!r.ok)throw new Error((await r.text()).slice(0,160)||r.status);const tx=await r.text();return tx?JSON.parse(tx):null}
+  const tx=await r.text().catch(()=>"");
+  if(!r.ok){const j=tx?parseJson(tx):null;throw new Error(errText(j,(tx||("Request failed ("+r.status+")")).slice(0,160)))}
+  if(!tx)return null;
+  const j=parseJson(tx);if(j===null)throw new Error("Supabase returned malformed JSON.");
+  return j}
+ catch(e){if(e&&e.name==="AbortError")throw new Error("Supabase request timed out. Check your connection and try again.");throw e}
  finally{clearTimeout(to)}}
 
 async function saveProgress(quiet){
@@ -543,36 +569,52 @@ async function saveProgress(quiet){
 async function loadBoard(){
  const ul=$("#boardList");$("#bNow").textContent=readiness()+"%";
  try{const rows=await sb("notebooks?select=nickname,city,readiness&order=readiness.desc,updated_at.desc&limit=10");
+  if(!Array.isArray(rows))throw new Error("Leaderboard data format was invalid.");
   ul.innerHTML=rows.length?rows.map(r=>`<li class="${r.nickname===S.nick&&r.city===S.city?"me":""}"><span>${esc(r.nickname)} <small>${esc(r.city)}</small></span><b>${+r.readiness}%</b></li>`).join(""):"<li>No one yet. Be first.</li>"}
- catch(e){ul.innerHTML="<li>The live board couldn’t load. Open the hosted copy on GitHub Pages to test Supabase live.</li>"}}
+ catch(e){ul.innerHTML=`<li>${esc(e.message||"The live board couldn’t load.")}</li>`}}
 
 function autoSave(){if(S.nick&&S.city)saveProgress(true)}
 $("#saveBtn").onclick=()=>saveProgress(false);$("#refresh").onclick=loadBoard;
 
-async function authCall(p,body){const r=await fetch(SB_URL+"/auth/v1/"+p,{method:"POST",headers:Object.assign({},H,{Authorization:"Bearer "+SB_KEY}),body:JSON.stringify(body)});
- const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.error_description||j.message||"Sign-in failed");return j}
+async function authCall(p,body){
+ if(SB_CFG_ERR)throw new Error(SB_CFG_ERR);
+ let r;
+ try{r=await fetch(SB_URL+"/auth/v1/"+p,{method:"POST",headers:Object.assign({},H,{Authorization:"Bearer "+SB_KEY}),body:JSON.stringify(body)})}
+ catch(e){throw new Error("Couldn’t reach Supabase. Check your connection and project URL.")}
+ const tx=await r.text().catch(()=>"");
+ if(!tx)return r.ok?{}:(()=>{throw new Error("Supabase returned an empty auth response.")})();
+ const j=parseJson(tx);
+ if(j===null)throw new Error("Supabase returned malformed auth data.");
+ if(!r.ok)throw new Error(errText(j,"Sign-in failed"));
+ return j
+}
 
-function setSess(j){if(j.access_token){S.auth={at:j.access_token,rt:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user.id,email:j.user.email};save()}}
+function setSess(j){if(j&&j.access_token&&j.refresh_token&&j.user&&j.user.id&&j.user.email){S.auth={at:j.access_token,rt:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user.id,email:j.user.email};save();return true}return false}
 async function token(){const a=S.auth;if(!a)return null;if(Date.now()<a.exp)return a.at;
- try{const j=await authCall("token?grant_type=refresh_token",{refresh_token:a.rt});setSess(j);return S.auth.at}catch(e){S.auth=null;save();showAuth();return null}}
+ if(!a.rt){S.auth=null;save();showAuth();return null}
+ try{const j=await authCall("token?grant_type=refresh_token",{refresh_token:a.rt});if(setSess(j))return S.auth.at;throw new Error("Session refresh failed")}
+ catch(e){S.auth=null;save();showAuth();$("#aMsg").textContent="Session expired. Sign in again.";return null}}
 
-function showAuth(){const a=S.auth;$("#authOut").hidden=!!a;$("#authIn").hidden=!a;$("#aWho").textContent=a?a.email:""}
+function showAuth(){const a=S.auth;$("#authOut").hidden=!!a;$("#authIn").hidden=!a;$("#aWho").textContent=a?a.email:"";if(!a&&SB_CFG_ERR)$("#aMsg").textContent=SB_CFG_ERR}
 
 async function doAuth(up){const email=$("#aEmail").value.trim(),pw=$("#aPw").value,m=$("#aMsg");
- if(!email||pw.length<6){m.textContent="Enter your email and a password of at least 6 characters.";return}
+ if(!EMAIL_RE.test(email)||pw.length<6){m.textContent="Enter a valid email and a password of at least 6 characters.";return}
+ if(SB_CFG_ERR){m.textContent=SB_CFG_ERR;return}
  m.textContent="One moment…";
  try{const j=await authCall(up?"signup":"token?grant_type=password",{email,password:pw});
-  if(!j.access_token){m.textContent="Check your email to confirm your account, then sign in.";return}
-  setSess(j);$("#aPw").value="";m.textContent="";showAuth();loadBoard();loadAsk()}
- catch(e){m.textContent=e.message}}
+  if(up&&!j.access_token){m.textContent="Account created. Check your email to confirm your account, then sign in.";return}
+  if(!setSess(j))throw new Error("Supabase did not return a complete session. Try signing in again.");
+  $("#aPw").value="";m.textContent=up?"Account created and signed in.":"Signed in.";showAuth();loadBoard();loadAsk()}
+ catch(e){m.textContent=/email.+confirm/i.test(e.message)?"Email not confirmed yet. Check your inbox/spam, confirm, then sign in.":e.message}}
 
 $("#inBtn").onclick=()=>doAuth(false);$("#upBtn").onclick=()=>doAuth(true);
 $("#outBtn").onclick=()=>{S.auth=null;save();showAuth();loadAsk()};
 
 async function loadAsk(){const ul=$("#askList");
  try{const rows=await sb("buddy_questions?select=id,nickname,question,context,answer,answered_by,answered_uid&order=created_at.desc&limit=15");
+  if(!Array.isArray(rows))throw new Error("Question feed format was invalid.");
   ul.innerHTML=rows.length?rows.map(r=>`<li data-id="${esc(r.id)}"><b>${esc(r.question)}</b> <small class="muted">${esc(r.nickname)}, ${esc(r.context)}</small>${r.answer?`<div class="note"><span class="hand">${esc(r.answered_by||"a learner")} explains</span>${esc(r.answer)}${S.auth&&r.answered_uid!==S.auth.uid?`<br><button class="btn" data-f="1" style="line-height:22px;font-size:.8rem;margin-top:6px">Flag as wrong</button>`:""}</div>`:(S.auth?`<div class="row"><input type="text" maxlength="600" placeholder="Explain it with a local example" aria-label="Your explanation"><button class="btn" data-a="1">Explain</button></div>`:`<div class="muted">Waiting for an explanation. Sign in to add one.</div>`)}</li>`).join(""):"<li>No questions yet. Ask the first one.</li>"}
- catch(e){ul.innerHTML="<li class=\"muted\">Questions couldn’t load. Open the hosted copy on GitHub Pages to connect.</li>"}}
+ catch(e){ul.innerHTML=`<li class="muted">${esc(e.message||"Questions couldn’t load.")}</li>`}}
 
 async function askQ(){const q=$("#askQ").value.trim(),m=$("#askMsg");
  if(!S.auth){m.textContent="Sign in first (Leaderboard tab).";return}
